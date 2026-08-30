@@ -140,6 +140,7 @@ import_formatter:
     ClientTickEvents: net.fabricmc.fabric.api.client.event.lifecycle.v1
     BlockRenderLayerMap: net.fabricmc.fabric.api.client.rendering.v1
     ChunkSectionLayer: net.minecraft.client.renderer.chunk
+    EntityModelLayerRegistry: net.fabricmc.fabric.api.client.rendering.v1
 # base generator roots
 source_root: "@WORKSPACEROOT/src/main/java"
 res_root: "@WORKSPACEROOT/src/main/resources"
