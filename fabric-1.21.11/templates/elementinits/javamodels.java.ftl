@@ -35,10 +35,10 @@ package ${package}.init;
 
 	public static void clientLoad() {
 		<#list javamodels as model>
-		ModelLayerRegistry.registerModelLayer(${model.getReadableName()}.LAYER_LOCATION, ${model.getReadableName()}::createBodyLayer);
+		EntityModelLayerRegistry.registerModelLayer(${model.getReadableName()}.LAYER_LOCATION, ${model.getReadableName()}::createBodyLayer);
 		</#list>
 		<#list specialentities as entity>
-		ModelLayerRegistry.registerModelLayer(${entity.getModElement().getRegistryNameUpper()}_LAYER_LOCATION, <#if entity.isAnyRaft()>Raft<#else>Boat</#if>Model::create${entity.entityType}Model);
+		EntityModelLayerRegistry.registerModelLayer(${entity.getModElement().getRegistryNameUpper()}_LAYER_LOCATION, <#if entity.isAnyRaft()>Raft<#else>Boat</#if>Model::create${entity.entityType}Model);
 		</#list>
 	}
 }
