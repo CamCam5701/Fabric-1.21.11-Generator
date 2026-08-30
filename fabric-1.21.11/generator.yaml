@@ -1,0 +1,285 @@
+name: Fabric for @minecraft (@buildfileversion)
+status: stable
+buildfileversion: 0.141.6+1.21.11
+subversion: 0
+
+import:
+  - datapack-1.21.1
+  - neoforge-1.21.1:
+    exclude:
+      - procedures
+      - triggers
+
+# Gradle task definitions
+gradle:
+  sync_task: genSources
+  run_client: runClient
+  run_server: runServer
+  export_file: "build/libs/modid-1.0.jar"
+
+import_formatter:
+  duplicates_whitelist:
+    - java.util
+    - net.minecraft
+    - net.fabricmc
+  priority_imports:
+    Environment: net.fabricmc.api
+    FabricLoader: net.fabricmc.loader.api
+    Nullable: org.jetbrains.annotations
+    Codec: com.mojang.serialization
+    SoundEvent: net.minecraft.sounds
+    Blocks: net.minecraft.world.level.block
+    Items: net.minecraft.world.item
+    Multimap: com.google.common.collect
+    ImmutableSet: com.google.common.collect
+    Iterables: com.google.common.collect
+    Attributes: net.minecraft.world.entity.ai.attributes
+    Keyframe: net.minecraft.client.animation
+    Potion: net.minecraft.world.item.alchemy
+    MapColor: net.minecraft.world.level.material
+    AttributeModifier: net.minecraft.world.entity.ai.attributes
+    Consumer: java.util.function
+
+    Block: net.minecraft.world.level.block
+    SimpleWaterloggedBlock: net.minecraft.world.level.block
+    EntityBlock: net.minecraft.world.level.block
+    BonemealableBlock: net.minecraft.world.level.block
+    HorizontalDirectionalBlock: net.minecraft.world.level.block
+    DirectionalBlock: net.minecraft.world.level.block
+    FaceAttachedHorizontalDirectionalBlock: net.minecraft.world.level.block
+    BlockBehaviour: net.minecraft.world.level.block.state
+    BlockState: net.minecraft.world.level.block.state
+    StateDefinition: net.minecraft.world.level.block.state
+    BooleanProperty: net.minecraft.world.level.block.state.properties
+    IntegerProperty: net.minecraft.world.level.block.state.properties
+    EnumProperty: net.minecraft.world.level.block.state.properties
+    BlockStateProperties: net.minecraft.world.level.block.state.properties
+    AttachFace: net.minecraft.world.level.block.state.properties
+    BlockSetType: net.minecraft.world.level.block.state.properties
+    WoodType: net.minecraft.world.level.block.state.properties
+    BlockPos: net.minecraft.core
+    Direction: net.minecraft.core
+    BuiltInRegistries: net.minecraft.core.registries
+    Identifier: net.minecraft.resources
+    Level: net.minecraft.world.level
+    LevelReader: net.minecraft.world.level
+    LevelAccessor: net.minecraft.world.level
+    BlockGetter: net.minecraft.world.level
+    ScheduledTickAccess: net.minecraft.world.level
+    ServerLevel: net.minecraft.server.level
+    RandomSource: net.minecraft.util
+    VoxelShape: net.minecraft.world.phys.shapes
+    Shapes: net.minecraft.world.phys.shapes
+    CollisionContext: net.minecraft.world.phys.shapes
+    FluidState: net.minecraft.world.level.material
+    Fluids: net.minecraft.world.level.material
+    PushReaction: net.minecraft.world.level.material
+    BlockPlaceContext: net.minecraft.world.item.context
+    ItemStack: net.minecraft.world.item
+    SoundType: net.minecraft.world.level.block
+    ConstantInt: net.minecraft.util.valueproviders
+    UniformInt: net.minecraft.util.valueproviders
+    ModInitializer: net.fabricmc.api
+    ClientModInitializer: net.fabricmc.api
+    EnvType: net.fabricmc.api
+    LiquidBlock: net.minecraft.world.level.block
+    AbstractContainerScreen: net.minecraft.client.gui.screens.inventory
+    EntityRendererProvider: net.minecraft.client.renderer.entity
+    EntityRenderer: net.minecraft.client.renderer.entity
+    MobRenderer: net.minecraft.client.renderer.entity
+    LivingEntityRenderer: net.minecraft.client.renderer.entity
+    ThrownItemRenderer: net.minecraft.client.renderer.entity
+    ArmorModelSet: net.minecraft.client.renderer.entity
+    RenderLayer: net.minecraft.client.renderer.entity.layers
+    HumanoidArmorLayer: net.minecraft.client.renderer.entity.layers
+    CrossedArmsItemLayer: net.minecraft.client.renderer.entity.layers
+    LivingEntityRenderState: net.minecraft.client.renderer.entity.state
+    HumanoidRenderState: net.minecraft.client.renderer.entity.state
+    EntityRenderState: net.minecraft.client.renderer.entity.state
+    HoldingEntityRenderState: net.minecraft.client.renderer.entity.state
+    ChickenRenderState: net.minecraft.client.renderer.entity.state
+    CreeperRenderState: net.minecraft.client.renderer.entity.state
+    GhastRenderState: net.minecraft.client.renderer.entity.state
+    FelineRenderState: net.minecraft.client.renderer.entity.state
+    PiglinRenderState: net.minecraft.client.renderer.entity.state
+    SalmonRenderState: net.minecraft.client.renderer.entity.state
+    VillagerRenderState: net.minecraft.client.renderer.entity.state
+    WitchRenderState: net.minecraft.client.renderer.entity.state
+    CameraRenderState: net.minecraft.client.renderer.state
+    SubmitNodeCollector: net.minecraft.client.renderer
+    RenderTypes: net.minecraft.client.renderer.rendertype
+    RenderType: net.minecraft.client.renderer.rendertype
+    OverlayTexture: net.minecraft.client.renderer.texture
+    ModelLayers: net.minecraft.client.model.geom
+    ModelPart: net.minecraft.client.model.geom
+    KeyframeAnimation: net.minecraft.client.animation
+    AnimationDefinition: net.minecraft.client.animation
+    Minecraft: net.minecraft.client
+    PoseStack: com.mojang.blaze3d.vertex
+    LivingEntity: net.minecraft.world.entity
+    DamageSource: net.minecraft.world.damagesource
+    AttributeSupplier: net.minecraft.world.entity.ai.attributes
+    EntityHitResult: net.minecraft.world.phys
+    BlockHitResult: net.minecraft.world.phys
+    AABB: net.minecraft.world.phys
+    Vec3: net.minecraft.world.phys
+    AbstractArrow: net.minecraft.world.entity.projectile.arrow
+    ItemSupplier: net.minecraft.world.entity.projectile
+    GuiGraphics: net.minecraft.client.gui
+    InventoryScreen: net.minecraft.client.gui.screens.inventory
+    RenderPipelines: net.minecraft.client.renderer
+    ARGB: net.minecraft.util
+    CursorTypes: com.mojang.blaze3d.platform.cursor
+    ClickType: net.minecraft.world.inventory
+    FabricBrewingRecipeRegistryBuilder: net.fabricmc.fabric.api.registry
+    FluidRenderHandlerRegistry: net.fabricmc.fabric.api.client.render.fluid.v1
+    SimpleFluidRenderHandler: net.fabricmc.fabric.api.client.render.fluid.v1
+    ItemGroupEvents: net.fabricmc.fabric.api.itemgroup.v1
+    ItemUseAnimation: net.minecraft.world.item
+    KeyBindingHelper: net.fabricmc.fabric.api.client.keybinding.v1
+    ClientTickEvents: net.fabricmc.fabric.api.client.event.lifecycle.v1
+    BlockRenderLayerMap: net.fabricmc.fabric.api.client.rendering.v1
+    ChunkSectionLayer: net.minecraft.client.renderer.chunk
+# base generator roots
+source_root: "@WORKSPACEROOT/src/main/java"
+res_root: "@WORKSPACEROOT/src/main/resources"
+mod_assets_root: "@RESROOT/assets/@modid"
+mod_data_root: "@RESROOT/data/@modid"
+
+# specific resource folders
+sounds_dir: "@MODASSETSROOT/sounds"
+structures_dir: "@MODDATAROOT/structure"
+block_textures_dir: "@MODASSETSROOT/textures/block"
+item_textures_dir: "@MODASSETSROOT/textures/item"
+entity_textures_dir: "@MODASSETSROOT/textures/entities"
+effect_textures_dir: "@MODASSETSROOT/textures/mob_effect"
+particle_textures_dir: "@MODASSETSROOT/textures/particle"
+screen_textures_dir: "@MODASSETSROOT/textures/screens"
+armor_textures_dir: "@MODASSETSROOT/textures/entity/equipment/humanoid" # Files are copied to humanoid_leggings inside the builld.gradle file
+other_textures_dir: "@MODASSETSROOT/textures"
+
+# vanilla resources
+vanilla_resources_jar: ".*-merged-.*.jar"
+vanilla_block_textures_dir: "assets/minecraft/textures/block"
+vanilla_item_textures_dir: "assets/minecraft/textures/item"
+
+base_templates:
+  - template: modbase/mod.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/@JavaModName.java"
+  - template: modbase/mod_client.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/@JavaModNameClient.java"
+  - template: modbase/fabric.mod.json.ftl
+    writer: json
+    name: "@RESROOT/fabric.mod.json"
+  - template: pack.mcmeta.ftl # loaded from datapack generator
+    writer: json
+    name: "@RESROOT/pack.mcmeta"
+  - template: modbase/sounds.json.ftl
+    writer: json
+    name: "@MODASSETSROOT/sounds.json"
+    condition: hasSounds()
+  - template: modbase/sounds.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/init/@JavaModNameSounds.java"
+    condition: hasSounds()
+  - template: modbase/variableslist.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/network/@JavaModNameVariables.java"
+    condition: hasVariables()
+  - template: elementinits/tabs.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/init/@JavaModNameTabs.java"
+    condition: hasItemsInTabs()
+  - template: modbase/accesswidener.ftl
+    usercodeComment: "#"
+    writer: file
+    name: "@RESROOT/META-INF/@modid.classtweaker"
+  - template: elementinits/javamodels.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/init/@JavaModNameModels.java"
+    condition_any:
+      - hasJavaModels()
+      - "${w.hasElementsOfType('specialentity')}"
+  - template: modbase/mixin.json.ftl
+    writer: json
+    name: "@RESROOT/@modid.mixins.json"
+
+# ItemExtension
+  - template: elementinits/dispensebehaviors.java.ftl
+    name: "@SRCROOT/@BASEPACKAGEPATH/init/@JavaModNameDispenseBehaviors.java"
+    condition_any:
+      - "${w.getGElementsOfType('itemextension')?filter(e -> e.hasDispenseBehavior)?size != 0}"
+      - "${w.hasElementsOfType('specialentity')}"
+
+# Mixins
+  - template: mixin/livingentity_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/LivingEntityMixin.java"
+  - template: mixin/player_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/PlayerMixin.java"
+  - template: mixin/itemstack_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/ItemStackMixin.java"
+  - template: mixin/blockitem_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/BlockItemMixin.java"
+  - template: mixin/bonemealitem_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/BoneMealItemMixin.java"
+  - template: mixin/commands_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/CommandsMixin.java"
+  - template: mixin/experienceorb_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/ExperienceOrbMixin.java"
+
+# Custom events
+  - template: event/livingentity_events.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/event/LivingEntityEvents.java"
+  - template: event/player_events.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/event/PlayerEvents.java"
+  - template: event/block_events.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/event/BlockEvents.java"
+  - template: event/item_events.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/event/ItemEvents.java"
+  - template: event/misc_events.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/event/MiscEvents.java"
+
+java_models:
+  key: mojmap-1.21.x
+  compatible: [mojmap-1.17.x, mojmap-1.18.x, mojmap-1.19.x, mojmap-1.20.x, mojmap-1.21.x, mojmap-26.1.x]
+  requested_key_words: [ModelPart, ~ModelRenderer]
+
+sources_setup_tasks:
+  - task: copy_models
+    type: JAVA_viatemplate
+    cleanupBeforeCopy: true
+    template: javamodel.java.ftl
+    to: "@SRCROOT/@BASEPACKAGEPATH/client/model"
+  - task: copy_model_animations
+    type: JAVA_viatemplate
+    cleanupBeforeCopy: true
+    template: javaanimation.java.ftl
+    to: "@SRCROOT/@BASEPACKAGEPATH/client/model/animations"
+
+tags:
+  template: tags.json.ftl # loaded from datapack generator
+  name: "@RESROOT/data/@namespace/tags/@folder/@name.json"
+
+language_file:
+  format: json
+  root_folder: "@MODASSETSROOT/lang/"
+  langfile_name: "@langname.json"
+
+resources_setup_tasks:
+  - task: copy_file
+    from: "@MODASSETSROOT/textures/@modpicture.png"
+    to: "@RESROOT/logo.png"
+#  - task: copy_models
+#    type: OBJ_referencetextures
+#    to: "@MODASSETSROOT/models/item"
+  - task: copy_models
+    type: JSON_noinlinetextures
+    to: "@MODASSETSROOT/models/custom"
