@@ -1,0 +1,61 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version '1.14-SNAPSHOT'
+}
+
+version = '1.0'
+group = 'com.yourname'
+base.archivesName = "modid"
+actualmodid = '${modid}'
+
+loom {
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName = actualmodid + ".refmap.json"
+    }
+
+    def classTweakerFile = file("src/main/resources/META-INF/${modid}.classtweaker")
+    if (classTweakerFile.exists()) {
+        def classTweakerHeader = classTweakerFile.readLines("UTF-8")
+            .find { line -> !line.trim().isEmpty() && !line.trim().startsWith("#") }
+
+        // During 26.1.2 -> 1.21.11 conversion the old file is still in the
+        // 'official' namespace until MCreator regenerates base resources.
+        // Only apply a class tweaker that is already valid for obfuscated 1.21.x.
+        if (classTweakerHeader != null && classTweakerHeader.trim() == "classTweaker v1 named") {
+            accessWidenerPath = classTweakerFile
+        } else {
+            logger.lifecycle("Skipping incompatible pre-regeneration class tweaker during workspace setup: " + classTweakerHeader)
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${generator.getGeneratorMinecraftVersion()}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:0.18.2"
+
+    // Fabric API
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${generator.getGeneratorBuildFileVersion()}"
+}
+
+// We need to do this because MCreator doesn't allow to split armor textures in multiple folders
+tasks.named('processResources', ProcessResources) {
+    doLast {
+        copy {
+            from(layout.buildDirectory.dir("resources/main/assets/${modid}/textures/entity/equipment/humanoid"))
+            into(layout.buildDirectory.dir("resources/main/assets/${modid}/textures/entity/equipment/humanoid_leggings"))
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+apply from: 'mcreator.gradle'
