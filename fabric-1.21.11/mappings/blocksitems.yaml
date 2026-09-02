@@ -1,3 +1,7 @@
 Items.SKULL:
   - Items.SKELETON_SKULL
   - "skeleton_skull"
+
+Blocks.CHAIN:
+  - Blocks.IRON_CHAIN
+  - "iron_chain"
