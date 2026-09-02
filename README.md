@@ -20,7 +20,7 @@ This 1.21.11 port uses Fabric Loader 0.18.2, Loom 1.14-SNAPSHOT (remap), Gradle 
 
 ## Credits / License
 
-Developer: CamCam5701
+Developer: [CamCam5701](https://github.com/CamCam5701)
 
 Contributers: [user444notfound](https://github.com/user444notfound)
 
