@@ -22,11 +22,11 @@ This 1.21.11 port uses Fabric Loader 0.18.2, Loom 1.14-SNAPSHOT (remap), Gradle 
 
 Developer: CamCam5701
 
+Contributers: [user444notfound](https://github.com/user444notfound)
+
 Forked from [Goldorion's Fabric Generator](https://github.com/Goldorion).
 
 This generator reuses code from the official MCreator NeoForge generator and from [Goldorion's Fabric 26.1.2 generator](https://mcreator.net/plugin/64512/mcreator-fabric-generator).
-
-The upstream Fabric Generator MCreator page is [here](https://mcreator.net/plugin/64512/mcreator-fabric-generator).
 
 Licensed under the GNU General Public License, version 3.0.
 
