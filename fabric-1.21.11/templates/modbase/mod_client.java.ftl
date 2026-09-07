@@ -22,6 +22,13 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
+import java.util.stream.Stream;
 
 import ${package}.init.*;
 
@@ -30,6 +37,8 @@ import ${package}.init.*;
 
 	@Override
 	public void onInitializeClient() {
+		cleanInvalidDevelopmentResources();
+
 		// Start of user code block mod constructor
 		// End of user code block mod constructor
 
@@ -63,6 +72,44 @@ import ${package}.init.*;
 
 		// Start of user code block mod init
 		// End of user code block mod init
+	}
+
+	private static void cleanInvalidDevelopmentResources() {
+		FabricLoader loader = FabricLoader.getInstance();
+		if (!loader.isDevelopmentEnvironment())
+			return;
+
+		loader.getModContainer("${modid}").ifPresent(container -> {
+			for (Path root : container.getRootPaths()) {
+				try {
+					if (!Files.isDirectory(root))
+						continue;
+
+					String rootName = root.toAbsolutePath().normalize().toString().replace('\\', '/').toLowerCase(Locale.ROOT);
+
+					// Never modify source assets. Loom normally exposes build/resources/main
+					// as the resource root in a Gradle development run.
+					if (rootName.contains("/src/"))
+						continue;
+
+					try (Stream<Path> paths = Files.walk(root)) {
+						paths.filter(Files::isRegularFile).forEach(path -> {
+							String relative = root.relativize(path).toString().replace('\\', '/');
+							String lower = relative.toLowerCase(Locale.ROOT);
+
+							if (relative.contains(" ") || lower.endsWith(".lnk")) {
+								try {
+									if (Files.deleteIfExists(path))
+										System.out.println("[MCreator/Fabric 1.21.11] Ignored invalid development resource: " + relative);
+								} catch (IOException ignored) {
+								}
+							}
+						});
+					}
+				} catch (IOException ignored) {
+				}
+			}
+		});
 	}
 
 	// Start of user code block mod methods
