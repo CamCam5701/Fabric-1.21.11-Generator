@@ -1,8 +1,7 @@
 name: Fabric for @minecraft (@buildfileversion)
 status: stable
 buildfileversion: 0.141.6+1.21.11
-subversion: 0
-
+subversion: 2
 import:
   - datapack-1.21.1
   - neoforge-1.21.1:
@@ -141,6 +140,9 @@ import_formatter:
     BlockRenderLayerMap: net.fabricmc.fabric.api.client.rendering.v1
     ChunkSectionLayer: net.minecraft.client.renderer.chunk
     EntityModelLayerRegistry: net.fabricmc.fabric.api.client.rendering.v1
+    ServerEntityWorldChangeEvents: net.fabricmc.fabric.api.entity.event.v1
+    ColorProviderRegistry: net.fabricmc.fabric.api.client.rendering.v1
+    ParticleFactoryRegistry: net.fabricmc.fabric.api.client.particle.v1
 # base generator roots
 source_root: "@WORKSPACEROOT/src/main/java"
 res_root: "@WORKSPACEROOT/src/main/resources"
