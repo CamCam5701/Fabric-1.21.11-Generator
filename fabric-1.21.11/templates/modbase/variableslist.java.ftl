@@ -46,7 +46,7 @@ public class ${JavaModName}Variables {
 				ServerPlayNetworking.send(newPlayer, new PlayerVariablesSyncMessage(oldPlayer.getAttachedOrCreate(PLAYER_VARIABLES)));
 		});
 
-		ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
 			if (!destination.isClientSide())
 				ServerPlayNetworking.send(player, new PlayerVariablesSyncMessage(player.getAttachedOrCreate(PLAYER_VARIABLES)));
 		});
@@ -89,7 +89,7 @@ public class ${JavaModName}Variables {
 				ServerPlayNetworking.send(player, new SavedDataSyncMessage(1, worlddata));
 		});
 
-		ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
 			if (!destination.isClientSide()) {
 				SavedData worlddata = WorldVariables.get(player.level());
 				if(worlddata != null)
@@ -97,7 +97,7 @@ public class ${JavaModName}Variables {
 			}
 		});
 
-        ServerTickEvents.END_LEVEL_TICK.register((level) -> {
+        ServerTickEvents.END_WORLD_TICK.register((level) -> {
 			WorldVariables worldVariables = WorldVariables.get(level);
 			if (worldVariables._syncDirty) {
 			    level.players().forEach(player -> ServerPlayNetworking.send(player, new SavedDataSyncMessage(1, worldVariables)));
@@ -106,7 +106,7 @@ public class ${JavaModName}Variables {
 
 			MapVariables mapVariables = MapVariables.get(level);
 			if (mapVariables._syncDirty) {
-			    PlayerLookup.level(level).forEach(player -> ServerPlayNetworking.send(player, new SavedDataSyncMessage(0, mapVariables)));
+			    PlayerLookup.world(level).forEach(player -> ServerPlayNetworking.send(player, new SavedDataSyncMessage(0, mapVariables)));
 			    mapVariables._syncDirty = false;
 			}
 		});
@@ -116,7 +116,7 @@ public class ${JavaModName}Variables {
 	<#if w.hasVariablesOfScope("GLOBAL_WORLD") || w.hasVariablesOfScope("GLOBAL_MAP")>
 	public static class WorldVariables extends SavedData {
 
-		public static final SavedDataType<WorldVariables> TYPE = new SavedDataType<>(Identifier.parse("${modid}:worldvars"), WorldVariables::new,
+		public static final SavedDataType<WorldVariables> TYPE = new SavedDataType<>("${modid}_worldvars", WorldVariables::new,
 				CompoundTag.CODEC.xmap(
 				tag -> {
 					WorldVariables instance = new WorldVariables();
@@ -170,7 +170,7 @@ public class ${JavaModName}Variables {
 
 	public static class MapVariables extends SavedData {
 
-		public static final SavedDataType<MapVariables> TYPE = new SavedDataType<>(Identifier.parse("${modid}:mapvars"), MapVariables::new,
+		public static final SavedDataType<MapVariables> TYPE = new SavedDataType<>("${modid}_mapvars", MapVariables::new,
 				CompoundTag.CODEC.xmap(
 				tag -> {
 					MapVariables instance = new MapVariables();
