@@ -12,6 +12,7 @@ templates:
     name: "@MODASSETSROOT/models/item/@registryname_spawn_egg.json"
   - template: json/model_spawn_egg.json.ftl
     writer: json
+    condition: hasSpawnEgg
     name: "@MODASSETSROOT/items/@registryname_spawn_egg.json"
 
 unmodifiable_ai_bases: [ Bat, MagmaCube, Slime ]
