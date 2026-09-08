@@ -58,11 +58,7 @@
     <#elseif mappedBlock?starts_with("CUSTOM:")>
         <#return mappedElementToRegistryEntry(mappedBlock) + generator.isBlock(mappedBlock)?then(".asItem()", "")>
     <#else>
-        <#if mappedBlock?matches("Blocks\\.(WHITE|ORANGE|MAGENTA|LIGHT_BLUE|YELLOW|LIME|PINK|GRAY|LIGHT_GRAY|CYAN|PURPLE|BLUE|BROWN|GREEN|RED|BLACK)_WOOL")>
-            <#assign woolColor = mappedBlock?keep_after("Blocks.")?keep_before("_WOOL")?lower_case>
-            <#assign woolMethod = {"white":"white", "orange":"orange", "magenta":"magenta", "light_blue":"lightBlue", "yellow":"yellow", "lime":"lime", "pink":"pink", "gray":"gray", "light_gray":"lightGray", "cyan":"cyan", "purple":"purple", "blue":"blue", "brown":"brown", "green":"green", "red":"red", "black":"black"}[woolColor]>
-            <#return "Items.WOOL." + woolMethod + "()">
-        <#elseif mappedBlock?matches("Blocks\\.(WHITE|ORANGE|MAGENTA|LIGHT_BLUE|YELLOW|LIME|PINK|GRAY|LIGHT_GRAY|CYAN|PURPLE|BLUE|BROWN|GREEN|RED|BLACK)_CANDLE")>
+        <#if mappedBlock?matches("Blocks\\.(WHITE|ORANGE|MAGENTA|LIGHT_BLUE|YELLOW|LIME|PINK|GRAY|LIGHT_GRAY|CYAN|PURPLE|BLUE|BROWN|GREEN|RED|BLACK)_CANDLE")>
             <#assign candleName = mappedBlock?keep_after("Blocks.")?lower_case>
             <#return 'BuiltInRegistries.ITEM.get(Identifier.withDefaultNamespace("' + candleName + '")).orElseThrow().value()'>
         <#elseif mappedBlock?contains("Blocks.")>
