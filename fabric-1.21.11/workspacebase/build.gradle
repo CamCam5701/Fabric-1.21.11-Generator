@@ -29,6 +29,30 @@ loom {
     }
 }
 
+
+// Fabric Loom's development run can expose source resource directories directly,
+// so task-level processResources excludes are not enough. Filter invalid legacy
+// resource names at the source-set level too.
+sourceSets {
+    main {
+        resources {
+            exclude { details ->
+                def resourcePath = details.relativePath.pathString
+                resourcePath.contains(' ') || resourcePath.toLowerCase().endsWith('.lnk')
+            }
+        }
+    }
+}
+
+
+// Keep invalid resource paths out of produced jars as well.
+tasks.withType(Jar).configureEach {
+    exclude { details ->
+        def resourcePath = details.relativePath.pathString
+        resourcePath.contains(' ') || resourcePath.toLowerCase().endsWith('.lnk')
+    }
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${generator.getGeneratorMinecraftVersion()}"
     mappings loom.officialMojangMappings()
@@ -40,6 +64,14 @@ dependencies {
 
 // We need to do this because MCreator doesn't allow to split armor textures in multiple folders
 tasks.named('processResources', ProcessResources) {
+    // Minecraft resource locations cannot contain spaces, and Windows shortcut
+    // files are never valid mod resources. Ignore legacy/accidental files that
+    // would otherwise make the client resource loader print errors.
+    exclude { details ->
+        def resourcePath = details.relativePath.pathString
+        resourcePath.contains(' ') || resourcePath.toLowerCase().endsWith('.lnk')
+    }
+
     doLast {
         copy {
             from(layout.buildDirectory.dir("resources/main/assets/${modid}/textures/entity/equipment/humanoid"))
@@ -59,3 +91,164 @@ java {
 }
 
 apply from: 'mcreator.gradle'
+
+// MCreator runs "Run server and client" as one Gradle invocation containing both
+// runServer and runClient. Loom's normal runServer task blocks until the dedicated
+// server exits, so Gradle never reaches runClient.
+//
+// For the combined invocation only, launch the exact Loom-configured server Java
+// command as a child process, wait only until the server is actually listening, and
+// then let Gradle continue to runClient. Standalone runServer keeps Loom's normal
+// foreground behavior.
+def requestedMCreatorTasks = gradle.startParameter.taskNames.collect { name ->
+    name.tokenize(':').last()
+}
+def mcreatorCombinedServerClientRun = requestedMCreatorTasks.contains('runServer') && requestedMCreatorTasks.contains('runClient')
+def mcreatorCombinedServerProcess = [process: null]
+
+def stopMCreatorCombinedServer = {
+    Process process = mcreatorCombinedServerProcess.process
+
+    if (process != null && process.isAlive()) {
+        if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+            new ProcessBuilder('taskkill', '/PID', Long.toString(process.pid()), '/T', '/F')
+                .redirectErrorStream(true)
+                .start()
+                .waitFor()
+        } else {
+            def descendants = process.toHandle().descendants().toList().reverse()
+            descendants.each { handle ->
+                if (handle.isAlive()) handle.destroy()
+            }
+
+            process.destroy()
+            process.waitFor(3, java.util.concurrent.TimeUnit.SECONDS)
+
+            descendants.each { handle ->
+                if (handle.isAlive()) handle.destroyForcibly()
+            }
+
+            if (process.isAlive()) process.destroyForcibly()
+        }
+    }
+
+    mcreatorCombinedServerProcess.process = null
+}
+
+tasks.register('stopMCreatorCombinedServer') {
+    doLast {
+        stopMCreatorCombinedServer()
+    }
+}
+
+if (mcreatorCombinedServerClientRun) {
+    afterEvaluate {
+        def serverTask = tasks.named('runServer').get()
+        def serverRunConfig = loom.runs.getByName('server')
+
+        // Clearing JavaExec's action removes Gradle's inferred relationship to the
+        // downloaded assets directory, so keep it explicit for Gradle validation.
+        serverTask.dependsOn('downloadAssets')
+        serverTask.actions.clear()
+
+        serverTask.doLast {
+            String javaExec = serverTask.javaLauncher.get().executablePath.asFile.absolutePath
+
+            List<String> command = [javaExec]
+            command.addAll(serverTask.allJvmArgs.collect { it.toString() })
+            command.add(serverTask.mainClass.get())
+
+            if (serverTask.args != null) {
+                command.addAll(serverTask.args.collect { it.toString() })
+            }
+
+            serverTask.argumentProviders.each { provider ->
+                provider.asArguments().each { arg ->
+                    command.add(arg.toString())
+                }
+            }
+
+            File runDirectory = new File(project.projectDir, serverRunConfig.runDir)
+            if (!runDirectory.exists()) {
+                runDirectory.mkdirs()
+            }
+
+            ProcessBuilder processBuilder = new ProcessBuilder(command)
+            processBuilder.directory(runDirectory)
+            processBuilder.redirectErrorStream(true)
+
+            serverTask.environment.each { key, value ->
+                if (value != null) {
+                    processBuilder.environment().put(key.toString(), value.toString())
+                }
+            }
+
+            serverRunConfig.environmentVariables.each { key, value ->
+                if (value != null) {
+                    processBuilder.environment().put(key.toString(), value.toString())
+                }
+            }
+
+            File combinedServerLog = new File(runDirectory, 'mcreator-combined-server.log')
+            processBuilder.redirectOutput(combinedServerLog)
+
+            Process process = processBuilder.start()
+            mcreatorCombinedServerProcess.process = process
+
+            int serverPort = 25565
+            File serverProperties = new File(runDirectory, 'server.properties')
+
+            if (serverProperties.isFile()) {
+                Properties properties = new Properties()
+                serverProperties.withInputStream { properties.load(it) }
+
+                String configuredPort = properties.getProperty('server-port')
+                if (configuredPort != null && configuredPort.isInteger()) {
+                    serverPort = configuredPort.toInteger()
+                }
+            }
+
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(45)
+            boolean serverReady = false
+
+            while (System.nanoTime() < deadline) {
+                if (!process.isAlive()) {
+                    String details = combinedServerLog.isFile() ? combinedServerLog.getText('UTF-8') : ''
+                    throw new GradleException(
+                        "MCreator combined Fabric server exited before opening port " +
+                        serverPort + ".\n" + details
+                    )
+                }
+
+                try {
+                    Socket socket = new Socket()
+                    try {
+                        socket.connect(new InetSocketAddress('127.0.0.1', serverPort), 250)
+                        serverReady = true
+                        break
+                    } finally {
+                        socket.close()
+                    }
+                } catch (IOException ignored) {
+                    Thread.sleep(200)
+                }
+            }
+
+            if (!serverReady) {
+                stopMCreatorCombinedServer()
+
+                String details = combinedServerLog.isFile() ? combinedServerLog.getText('UTF-8') : ''
+                throw new GradleException(
+                    "MCreator combined Fabric server did not open port " +
+                    serverPort + " within 45 seconds.\n" + details
+                )
+            }
+
+            logger.lifecycle("MCreator combined Fabric server is ready on localhost:" + serverPort)
+        }
+
+        tasks.named('runClient').configure {
+            finalizedBy('stopMCreatorCombinedServer')
+        }
+    }
+}
