@@ -35,7 +35,7 @@ public class ${JavaModName}ItemExtensions {
 		</#list>
 
         <#if w.getGElementsOfType('itemextension')?filter(e -> e.enableFuel)?size != 0>
-		FuelValueEvents.BUILD.register((builder, context) -> {
+		FuelRegistryEvents.BUILD.register((builder, context) -> {
             <#list itemextensions?filter(e -> e.enableFuel) as extension>
                 <#if hasProcedure(extension.fuelSuccessCondition)>if(<@procedureOBJToConditionCode extension.fuelSuccessCondition/>)</#if>
                     builder.add(${mappedMCItemToItem(extension.item)},

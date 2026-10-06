@@ -1,9 +1,9 @@
 <#include "procedures.java.ftl">
 public ${name}Procedure() {
-	ServerLevelEvents.LOAD.register((server, world) -> {
+	ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
 		<#assign dependenciesCode>
 			<@procedureDependenciesCode dependencies, {
-			"world": "world"
+			"world": "server.overworld()"
 			}/>
 		</#assign>
 		execute(${dependenciesCode});
