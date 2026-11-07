@@ -7,6 +7,10 @@
 <#-- @formatter:off -->
 package ${package}.client.model;
 
+// Support models exported with Yarn names in a Mojang-mapped workspace.
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import com.mojang.blaze3d.vertex.PoseStack;
+
 ${model
 ?replace("private final ModelPart", "public final ModelPart")
 ?replace("new Identifier\\(\"(.*?)\", \"(.*?)\"\\)", "Identifier.fromNamespaceAndPath(\"" + modid + "\", \"" + modelregistryname + "\")", "r")
@@ -22,5 +26,11 @@ ${model
 ?replace("<T>", "<LivingEntityRenderState>", "")
 ?replace("root\\)\\s+\\{", "root) {super(root);", "r")
 ?replace("void setupAnim\\(T(.*?)\\{", "void setupAnim(LivingEntityRenderState state) {\n\t\tfloat limbSwing = state.walkAnimationPos;\n\t\tfloat limbSwingAmount = state.walkAnimationSpeed;\n\t\tfloat ageInTicks = state.ageInTicks;\n\t\tfloat netHeadYaw = state.yRot;\n\t\tfloat headPitch = state.xRot;\n", "rms")
+?replace("net.minecraft.client.model.TexturedModelData", "net.minecraft.client.model.geom.builders.LayerDefinition")
+?replace("net.minecraft.client.util.math.MatrixStack", "com.mojang.blaze3d.vertex.PoseStack")
+?replace("TexturedModelData", "LayerDefinition")
+?replace("MatrixStack", "PoseStack")
+?replace("LayerDefinition.of\\(", "LayerDefinition.create(", "r")
+?replace("getTexturedModelData\\(", "createBodyLayer(", "r")
 }
 <#-- @formatter:on -->
