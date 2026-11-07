@@ -14,18 +14,28 @@ loom {
     }
 
     def classTweakerFile = file("src/main/resources/META-INF/${modid}.classtweaker")
-    if (classTweakerFile.exists()) {
-        def classTweakerHeader = classTweakerFile.readLines("UTF-8")
-            .find { line -> !line.trim().isEmpty() && !line.trim().startsWith("#") }
 
-        // During 26.1.2 -> 1.21.11 conversion the old file is still in the
-        // 'official' namespace until MCreator regenerates base resources.
-        // Only apply a class tweaker that is already valid for obfuscated 1.21.x.
-        if (classTweakerHeader != null && classTweakerHeader.trim() == "classTweaker v1 named") {
-            accessWidenerPath = classTweakerFile
-        } else {
-            logger.lifecycle("Skipping incompatible pre-regeneration class tweaker during workspace setup: " + classTweakerHeader)
-        }
+    // MCreator generates the class tweaker as part of mod base resources, but
+    // Loom can configure the Gradle project *before* those resources exist.
+    // Previously we skipped setting accessWidenerPath in that case, leaving
+    // private Minecraft types (e.g. EquipmentLayerRenderer's key records)
+    // inaccessible to generated armor mixins even after code regeneration.
+    // Create a valid, empty class tweaker for the initial setup. MCreator will
+    // replace it with the full generated file when resources are regenerated.
+    if (!classTweakerFile.exists()) {
+        classTweakerFile.parentFile.mkdirs()
+        classTweakerFile.setText("classTweaker v1 named\n", "UTF-8")
+    }
+
+    def classTweakerHeader = classTweakerFile.readLines("UTF-8")
+        .find { line -> !line.trim().isEmpty() && !line.trim().startsWith("#") }
+
+    // A legacy pre-regeneration file from another Minecraft namespace must
+    // still be skipped to avoid failing the initial workspace import.
+    if (classTweakerHeader != null && classTweakerHeader.trim() == "classTweaker v1 named") {
+        accessWidenerPath = classTweakerFile
+    } else {
+        logger.lifecycle("Skipping incompatible pre-regeneration class tweaker during workspace setup: " + classTweakerHeader)
     }
 }
 
@@ -62,7 +72,11 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${generator.getGeneratorBuildFileVersion()}"
 }
 
-// We need to do this because MCreator doesn't allow to split armor textures in multiple folders
+// MCreator's armor texture picker produces <name>_layer_1.png and
+// <name>_layer_2.png. Minecraft 1.21.11 expects them in separate equipment
+// directories. An older MCreator generator may have left their originals in
+// textures/models/armor, so recover those resources *when present*, without
+// touching the source artwork or overwriting correctly installed files.
 tasks.named('processResources', ProcessResources) {
     // Minecraft resource locations cannot contain spaces, and Windows shortcut
     // files are never valid mod resources. Ignore legacy/accidental files that
@@ -73,9 +87,68 @@ tasks.named('processResources', ProcessResources) {
     }
 
     doLast {
-        copy {
-            from(layout.buildDirectory.dir("resources/main/assets/${modid}/textures/entity/equipment/humanoid"))
-            into(layout.buildDirectory.dir("resources/main/assets/${modid}/textures/entity/equipment/humanoid_leggings"))
+        File texturesRoot = layout.buildDirectory.dir("resources/main/assets/${modid}/textures").get().asFile
+        File equipmentRoot = new File(texturesRoot, 'entity/equipment')
+        File humanoidDir = new File(equipmentRoot, 'humanoid')
+        File leggingsDir = new File(equipmentRoot, 'humanoid_leggings')
+
+        // Older generators stored both layers in one folder. Use the copied
+        // resource folders so this also works when importing an old workspace.
+        List<File> legacyDirs = [
+            new File(texturesRoot, 'models/armor'),
+            new File(texturesRoot, 'armor'),
+            equipmentRoot,
+            humanoidDir
+        ]
+
+        int recovered = 0
+        legacyDirs.each { File folder ->
+            if (folder.isDirectory()) {
+                folder.listFiles()?.findAll { it.isFile() && (it.name ==~ /(?i).*_layer_[12]\.png/) }?.each { File original ->
+                    File destination = new File(
+                        original.name.toLowerCase(Locale.ROOT).endsWith('_layer_2.png') ? leggingsDir : humanoidDir,
+                        original.name
+                    )
+                    // Never replace a real, current-version texture with a legacy one.
+                    if (!destination.isFile()) {
+                        destination.parentFile.mkdirs()
+                        java.nio.file.Files.copy(original.toPath(), destination.toPath())
+                        recovered++
+                    }
+                }
+            }
+        }
+        if (recovered > 0) {
+            logger.lifecycle("Recovered ${recovered} armor texture PNG(s) from existing workspace resources")
+        }
+
+        // An asset that was deleted outright cannot be recreated by a generator.
+        // Explain missing equipment textures instead of silently rendering purple.
+        File equipmentDefs = layout.buildDirectory.dir("resources/main/assets/${modid}/equipment").get().asFile
+        if (equipmentDefs.isDirectory()) {
+            def parser = new groovy.json.JsonSlurper()
+            equipmentDefs.listFiles()?.findAll { it.isFile() && it.name.endsWith('.json') }?.each { File definition ->
+                def equipmentJson = parser.parse(definition)
+                if (equipmentJson instanceof Map && equipmentJson.layers instanceof Map) {
+                    ['humanoid', 'humanoid_leggings'].each { String layerType ->
+                        def layers = equipmentJson.layers[layerType]
+                        if (layers instanceof List) {
+                            layers.each { layer ->
+                                if (layer instanceof Map && layer.texture instanceof String) {
+                                    String prefix = actualmodid + ':'
+                                    if (layer.texture.startsWith(prefix)) {
+                                        String textureName = layer.texture.substring(prefix.length())
+                                        File expected = new File(equipmentRoot, layerType + '/' + textureName + '.png')
+                                        if (!expected.isFile()) {
+                                            logger.warn("Missing armor PNG: ${expected}. Restore the original texture in MCreator's resources before exporting the mod.")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
