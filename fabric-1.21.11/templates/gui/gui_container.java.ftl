@@ -86,7 +86,28 @@ public class ${name}Menu extends AbstractContainerMenu implements ${JavaModName}
 	}
 
 	public ${name}Menu(int id, Inventory inv, FriendlyByteBuf extraData) {
-		this(id, inv, new SimpleContainer(${data.getMaxSlotID() + 1}), extraData);
+		this(id, inv, resolveContainer(inv, extraData), extraData);
+	}
+
+	private static Container resolveContainer(Inventory inv, FriendlyByteBuf extraData) {
+		if (extraData != null && !inv.player.level().isClientSide()) {
+			int readerIndex = extraData.readerIndex();
+			try {
+				BlockPos pos = extraData.readBlockPos();
+
+				// Procedure-opened GUIs only send a BlockPos. If there is a real
+				// container block at that position, use its inventory instead of
+				// creating a temporary SimpleContainer.
+				if (extraData.readableBytes() == 0
+						&& inv.player.level().getBlockEntity(pos) instanceof Container container) {
+					return container;
+				}
+			} finally {
+				extraData.readerIndex(readerIndex);
+			}
+		}
+
+		return new SimpleContainer(${data.getMaxSlotID() + 1});
 	}
 
 	public ${name}Menu(int id, Inventory inv, Container container, FriendlyByteBuf extraData) {
@@ -98,6 +119,14 @@ public class ${name}Menu extends AbstractContainerMenu implements ${JavaModName}
 			this.y = pos.getY();
 			this.z = pos.getZ();
 			access = ContainerLevelAccess.create(world, pos);
+
+			// A menu backed by the real container block must stay bound to that
+			// inventory so its contents are not returned/dropped when the GUI closes.
+			if (!world.isClientSide()
+					&& world.getBlockEntity(pos) instanceof Container blockContainer
+					&& blockContainer == this.inventory) {
+				this.bound = true;
+			}
 		}
 
 		<#if data.type == 1>
