@@ -21,9 +21,15 @@ package ${package}.mixin;
 @Mixin(Player.class)
 public abstract class PlayerMixin {
 
-	@Inject(method = "tick()V", at = @At("TAIL"))
-	public void tick(CallbackInfo ci) {
-		PlayerEvents.END_PLAYER_TICK.invoker().onEndTick((Player) (Object) this);
+	@org.spongepowered.asm.mixin.injection.Inject(
+		method = "drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;",
+		at = @At("RETURN")
+	)
+	private void mcreator$onItemDropped(net.minecraft.world.item.ItemStack itemstack, boolean includeThrower, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.world.entity.item.ItemEntity> cir) {
+		Player player = (Player) (Object) this;
+		if (!player.level().isClientSide() && cir.getReturnValue() != null) {
+			${package}.event.PlayerEvents.ITEM_DROPPED.invoker().onItemDropped(player, cir.getReturnValue().getItem());
+		}
 	}
 
 	@Inject(method = "giveExperiencePoints(I)V", at = @At("HEAD"))
