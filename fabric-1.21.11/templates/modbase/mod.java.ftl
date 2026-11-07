@@ -42,6 +42,8 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import net.minecraft.world.entity.player.Player;
 
+import ${package}.event.PlayerEvents;
+
 import org.jetbrains.annotations.Nullable;
 
 public class ${JavaModName} implements ModInitializer {
@@ -86,6 +88,13 @@ public class ${JavaModName} implements ModInitializer {
 		<#if types["stats"]??>${JavaModName}Stats.registerStats();</#if>
 		</@javacompress>
 
+        // Fabric lifecycle events avoid fragile injections into Player.tick().
+        // Each connected server player receives one event per server tick.
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
+                PlayerEvents.END_PLAYER_TICK.invoker().onEndTick(player);
+            }
+        });
 		tick();
 
 		// Start of user code block mod init
