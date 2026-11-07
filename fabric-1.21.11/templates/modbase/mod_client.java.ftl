@@ -22,6 +22,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 import ${package}.init.*;
+import ${package}.event.PlayerEvents;
 
 
 @Environment(EnvType.CLIENT) public class ${JavaModName}Client implements ClientModInitializer {
@@ -61,6 +63,13 @@ import ${package}.init.*;
 		<#if types["keybinds"]??>${JavaModName}KeyMappings.clientLoad();</#if>
 		<#if w.getGElementsOfType('dimension')?filter(e -> e.enableCustomSkyboxTextures || e.enableCustomSunMoonTextures)?size != 0>${JavaModName}SkyboxRenderer.renderSky();</#if>
 		</@javacompress>
+
+        // Dispatch client player tick once per client tick, without a Player mixin.
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player != null) {
+                PlayerEvents.END_PLAYER_TICK.invoker().onEndTick(client.player);
+            }
+        });
 
 		<#if w.hasVariablesOfScope("GLOBAL_WORLD") || w.hasVariablesOfScope("GLOBAL_MAP")>
 			ClientPlayNetworking.registerGlobalReceiver(${JavaModName}Variables.SavedDataSyncMessage.TYPE, ${JavaModName}Variables.SavedDataSyncMessage::handleData);
