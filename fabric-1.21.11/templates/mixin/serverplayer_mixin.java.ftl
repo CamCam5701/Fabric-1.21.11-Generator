@@ -23,12 +23,16 @@ package ${package}.mixin;
 
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
-    @Inject(method = "drop(Z)V", at = @At("HEAD"))
-    public void drop(boolean all, CallbackInfo ci) {
-        ServerPlayer self = (ServerPlayer) (Object) this;
-        Inventory inventory = self.getInventory();
-        ItemStack itemstack = inventory.removeFromSelected(all);
-        self.containerMenu.findSlot(inventory, inventory.getSelectedSlot()).ifPresent(p_401732_ -> self.containerMenu.setRemoteSlot(p_401732_, inventory.getSelectedItem()));
+	@com.llamalad7.mixinextras.injector.ModifyExpressionValue(
+		method = "drop(Z)V",
+		at = @At(
+			value = "INVOKE",
+			target = "Lnet/minecraft/world/entity/player/Inventory;removeFromSelected(Z)Lnet/minecraft/world/item/ItemStack;"
+		)
+	)
+	private ItemStack mcreator$onDropSelectedItem(ItemStack itemstack) {
+		ServerPlayer self = (ServerPlayer) (Object) this;
+
 		<#list items as item>
 			<#if item.getModElement().getTypeString() == "item">
 				<#if hasProcedure(item.onDroppedByPlayer)>
@@ -37,7 +41,10 @@ public abstract class ServerPlayerMixin {
 				</#if>
 			</#if>
 		</#list>
-        self.drop(itemstack, false, true);
-    }
+
+		// Return Minecraft's already-removed stack unchanged.
+		// Vanilla ServerPlayer.drop(boolean) performs the actual drop exactly once.
+		return itemstack;
+	}
 }
 <#-- @formatter:on -->
