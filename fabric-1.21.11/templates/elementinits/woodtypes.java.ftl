@@ -46,9 +46,16 @@ public class ${JavaModName}WoodTypes {
 
 	public static void load() {
 	    <#list signs as block>
-	        BlockEntityType.<#if block.blockBase == "HangingSign">HANGING_</#if>SIGN.addValidBlock(${JavaModName}Blocks.${block.getModElement().getRegistryNameUpper()});
-	        BlockEntityType.<#if block.blockBase == "HangingSign">HANGING_</#if>SIGN.addValidBlock(${JavaModName}Blocks.${block.getWallRegistryNameUpper()});
+	        addValidBlocks(BlockEntityType.<#if block.blockBase == "HangingSign">HANGING_</#if>SIGN,
+	            ${JavaModName}Blocks.${block.getModElement().getRegistryNameUpper()},
+	            ${JavaModName}Blocks.${block.getWallRegistryNameUpper()});
 	    </#list>
+	}
+
+	private static void addValidBlocks(BlockEntityType<?> type, net.minecraft.world.level.block.Block... blocks) {
+		var validBlocks = new java.util.HashSet<>(type.validBlocks);
+		java.util.Collections.addAll(validBlocks, blocks);
+		type.validBlocks = java.util.Set.copyOf(validBlocks);
 	}
 }</@javacompress>
 <#-- @formatter:on -->
