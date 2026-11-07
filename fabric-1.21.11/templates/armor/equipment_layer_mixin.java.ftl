@@ -50,6 +50,15 @@ public abstract class EquipmentLayerRendererMixin {
 					.orElse(-1);
 			if (color != 0) {
 				Identifier layerTexture = layer.usePlayerTexture() && playerTextureOverride != null ? playerTextureOverride : this.layerTextureLookup.apply(new EquipmentLayerRenderer.LayerTextureKey(layerType, layer));
+				// Custom armor models may use a texture different from the standard equipment layer.
+				// V1.2.12 ignored ArmorModel#getArmorTexture, causing the armor layer PNG to
+				// be applied to custom model UVs instead of the selected custom texture.
+				// Preserve the player's skin override and use vanilla layers as the fallback.
+				if (!(layer.usePlayerTexture() && playerTextureOverride != null)) {
+					Identifier customTexture = armorModel.getArmorTexture(itemStack, layerType, layer, layerTexture);
+					if (customTexture != null)
+						layerTexture = customTexture;
+				}
 				submitNodeCollector.order(nextOrder++).submitModel(model, state, poseStack, RenderTypes.armorCutoutNoCull(layerTexture), lightCoords, OverlayTexture.NO_OVERLAY, color, null, outlineColor, null);
 				if (renderFoil) {
 					submitNodeCollector.order(nextOrder++).submitModel(model, state, poseStack, RenderTypes.armorEntityGlint(), lightCoords, OverlayTexture.NO_OVERLAY, color, null, outlineColor, null);
