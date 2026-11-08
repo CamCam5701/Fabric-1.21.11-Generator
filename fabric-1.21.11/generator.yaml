@@ -1,7 +1,7 @@
 name: Fabric for @minecraft (@buildfileversion)
 status: stable
 buildfileversion: 0.141.6+1.21.11
-subversion: 16
+subversion: 18
 import:
   - datapack-1.21.1
   - neoforge-1.21.1:
@@ -193,7 +193,7 @@ base_templates:
   - template: modbase/accesswidener.ftl
     usercodeComment: "#"
     writer: file
-    name: "@RESROOT/META-INF/@modid.classtweaker"
+    name: "@RESROOT/META-INF/@modid.fabric12111.classtweaker"
   - template: elementinits/javamodels.java.ftl
     name: "@SRCROOT/@BASEPACKAGEPATH/init/@JavaModNameModels.java"
     condition_any:
