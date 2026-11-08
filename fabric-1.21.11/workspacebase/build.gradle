@@ -13,7 +13,30 @@ loom {
         defaultRefmapName = actualmodid + ".refmap.json"
     }
 
-    def classTweakerFile = file("src/main/resources/META-INF/${modid}.classtweaker")
+    // Fabric 1.21.11 uses named class-tweaker mappings, while newer Fabric
+    // generators using this workspace path expect official mappings. Keep
+    // them at separate locations so the next generator's initial @sync task
+    // cannot accidentally process a stale named tweaker as an official one.
+    def classTweakerFile = file("src/main/resources/META-INF/${modid}.fabric12111.classtweaker")
+    def legacySharedTweaker = file("src/main/resources/META-INF/${modid}.classtweaker")
+
+    // Migrate workspaces created by Fabric 1.21.11 V1.2 through V1.3.1.
+    // Only remove files explicitly marked as named; another generator's
+    // official class tweaker must never be touched. Preserve custom AW edits.
+    if (legacySharedTweaker.exists()) {
+        def legacyHeader = legacySharedTweaker.readLines("UTF-8")
+            .find { line -> !line.trim().isEmpty() && !line.trim().startsWith("#") }
+        if (legacyHeader != null && legacyHeader.trim() == "classTweaker v1 named") {
+            classTweakerFile.parentFile.mkdirs()
+            if (!classTweakerFile.exists()) {
+                classTweakerFile.bytes = legacySharedTweaker.bytes
+            }
+            if (!legacySharedTweaker.delete()) {
+                throw new GradleException("Unable to remove old named class tweaker: " + legacySharedTweaker)
+            }
+            logger.lifecycle("Migrated old Fabric 1.21.11 class tweaker away from shared path")
+        }
+    }
 
     // MCreator generates the class tweaker as part of mod base resources, but
     // Loom can configure the Gradle project *before* those resources exist.
@@ -119,7 +142,7 @@ tasks.named('processResources', ProcessResources) {
             }
         }
         if (recovered > 0) {
-            logger.lifecycle("Recovered ${recovered} armor texture PNG(s) from existing workspace resources")
+            logger.lifecycle("Recovered " + recovered + " armor texture PNG(s) from existing workspace resources")
         }
 
         // An asset that was deleted outright cannot be recreated by a generator.
@@ -140,7 +163,7 @@ tasks.named('processResources', ProcessResources) {
                                         String textureName = layer.texture.substring(prefix.length())
                                         File expected = new File(equipmentRoot, layerType + '/' + textureName + '.png')
                                         if (!expected.isFile()) {
-                                            logger.warn("Missing armor PNG: ${expected}. Restore the original texture in MCreator's resources before exporting the mod.")
+                                            logger.warn("Missing armor PNG: " + expected + ". Restore the original texture in MCreator's resources before exporting the mod.")
                                         }
                                     }
                                 }
