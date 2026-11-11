@@ -1,4 +1,4 @@
-<#assign mixins = ['LivingEntityMixin', 'PlayerMixin', 'ItemStackMixin', 'BlockItemMixin', 'BoneMealItemMixin', 'CommandsMixin', 'ExperienceOrbMixin']>
+<#assign mixins = ['LivingEntityMixin', 'PlayerMixin', 'InventoryMixin', 'ItemStackMixin', 'BlockItemMixin', 'BoneMealItemMixin', 'CommandsMixin', 'ExperienceOrbMixin']>
 <#assign client_mixins = []>
 <#if w.getGElementsOfType('biome')?filter(e -> e.spawnBiome || e.spawnInCaves || e.spawnBiomeNether)?size != 0>
   <#assign mixins = mixins + ['NoiseGeneratorSettingsMixin', 'BiomeSourcePresetMixin', 'LevelStorageSourceMixin']>
