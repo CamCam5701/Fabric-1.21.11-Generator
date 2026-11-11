@@ -1,7 +1,7 @@
 name: Fabric for @minecraft (@buildfileversion)
 status: stable
 buildfileversion: 0.141.6+1.21.11
-subversion: 18
+subversion: 20
 import:
   - datapack-1.21.1
   - neoforge-1.21.1:
@@ -217,6 +217,9 @@ base_templates:
   - template: mixin/player_mixin.java.ftl
     writer: java
     name: "@SRCROOT/@BASEPACKAGEPATH/mixin/PlayerMixin.java"
+  - template: mixin/inventory_mixin.java.ftl
+    writer: java
+    name: "@SRCROOT/@BASEPACKAGEPATH/mixin/InventoryMixin.java"
   - template: mixin/itemstack_mixin.java.ftl
     writer: java
     name: "@SRCROOT/@BASEPACKAGEPATH/mixin/ItemStackMixin.java"
