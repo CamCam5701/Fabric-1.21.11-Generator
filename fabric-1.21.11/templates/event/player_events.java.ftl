@@ -35,6 +35,16 @@ public class PlayerEvents {
 	public static final Event<LevelChange> LEVEL_CHANGE = EventFactory.createArrayBacked(LevelChange.class, (callbacks) -> (entity, amount) -> Arrays.stream(callbacks).forEach(callback -> callback.onLevelChange(entity, amount)));
 	public static final Event<ItemDropped> ITEM_DROPPED = EventFactory.createArrayBacked(ItemDropped.class, (callbacks) -> (entity, itemstack) -> Arrays.stream(callbacks).forEach(callback -> callback.onItemDropped(entity, itemstack)));
 
+    // Cancellable event fired before the selected hotbar stack is removed by Q/Ctrl+Q.
+    public static final Event<GemDropped> GEM_DROPPED = EventFactory.createArrayBacked(GemDropped.class, (callbacks) -> (entity, itemstack) -> {
+        for (GemDropped callback : callbacks) {
+            if (!callback.onGemDropped(entity, itemstack)) {
+                return false;
+            }
+        }
+        return true;
+    });
+
     public static final Event<PickupXp> PICKUP_XP = EventFactory.createArrayBacked(PickupXp.class, (callbacks) -> (entity) -> {
 		for (PickupXp event : callbacks) {
 			boolean result = event.onPickupXp(entity);
@@ -64,6 +74,11 @@ public class PlayerEvents {
 	public interface ItemDropped {
 		void onItemDropped(Player player, ItemStack itemstack);
 	}
+
+    @FunctionalInterface
+    public interface GemDropped {
+        boolean onGemDropped(Player player, ItemStack itemstack);
+    }
 
 	@FunctionalInterface
 	public interface PickupXp {
